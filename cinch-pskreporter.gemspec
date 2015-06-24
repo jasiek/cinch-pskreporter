@@ -1,11 +1,11 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'cinch/pskreporter/version'
+require 'cinch/plugins/pskreporter/version'
 
 Gem::Specification.new do |spec|
   spec.name          = "cinch-pskreporter"
-  spec.version       = Cinch::Pskreporter::VERSION
+  spec.version       = Cinch::Plugins::PSKReporter::VERSION
   spec.authors       = ["Jan Szumiec"]
   spec.email         = ["jan.szumiec@gmail.com"]
 

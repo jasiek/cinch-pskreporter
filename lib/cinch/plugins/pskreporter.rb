@@ -17,7 +17,7 @@ module Cinch::Plugins
 
     self.help = "Every 10 minutes, talk to pskreporter.info and post RX reports"
 
-    timer 10, method: :check_pskreporter
+    timer 600, method: :check_pskreporter
 
     def check_pskreporter
       config[:watchers].each do |channel, callsigns|

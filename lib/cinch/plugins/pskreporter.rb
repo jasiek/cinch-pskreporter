@@ -29,18 +29,18 @@ module Cinch::Plugins
     end
 
     def pskreporter_reports(callsign, since_when)
-      body = Net::HTTP.get("http://retrieve.pskreporter.info/query?senderCallsign=#{callsign}&flowStartSeconds=#{since_when}&rronly=1")
+      body = Net::HTTP.get(URI.parse "http://retrieve.pskreporter.info/query?senderCallsign=#{callsign}&flowStartSeconds=#{since_when}&rronly=1&rand=#{rand}")
       doc = REXML::Document.new(body)
       [].tap do |reports|
         doc.each_element("//receptionReport") do |element|
-          reports << Hashie::Mash.new(element.attributes)
+          reports << Hashie::Mash.new(element.attributes.symbolize_keys)
         end
       end
     end
 
     def msg_reports(channel, reports)
       reports.each do |report|
-        Channel(channel).msg(report_text(report))
+        Channel(channel).send(report_text(report))
       end
     end
 

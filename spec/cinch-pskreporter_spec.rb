@@ -2,10 +2,43 @@ require 'spec_helper'
 
 describe Cinch::Plugins::PSKReporter do
   include Cinch::Test
+  include Cinch::Helpers
 
-  before :all do
-    @bot = make_bot(Cinch::Plugins::PSKReporter,
-                    { watchers: { '2e0kef' => 'lhs-radio' } })
+  let :bot do
+    make_bot
+  end
+
+  before :each do
+    @plugin = Cinch::Plugins::PSKReporter.new(bot)
+    allow(@plugin).to receive(:config).and_return({ 
+      watchers: { 
+        'lhs-radio' => ['2e0kef', 'm0hsl'],
+        'hamradio' => ['k1jt']
+      }})
+  end
+
+  it "should generate a set of requests, one for each callsign" do
+    %w{2e0kef m0hsl k1jt}.each do |callsign|
+      expect(@plugin).to receive(:pskreporter_reports).with(callsign, -600).once.and_return([])
+    end
+    expect(@plugin).to receive(:msg_reports).never
+
+    @plugin.check_pskreporter
+  end
+
+  it "should send a message to the channel for each report" do
+    reports = [].tap do |reports|
+      REXML::Document.new(File.read('spec/data/reports.xml')).each_element("//receptionReport") do |element|
+        reports << Hashie::Mash.new(element.attributes.symbolize_keys)
+      end
+    end
+
+    expect(@plugin).to receive(:pskreporter_reports).with('2e0kef', anything).and_return(reports)
+    expect(@plugin).to receive(:pskreporter_reports).with(anything, anything).and_return([]).twice
+    expect(Channel('lhs-radio')).to receive(:msg).at_least(3).times
+    expect(Channel('hamradio')).to receive(:msg).never
+
+    @plugin.check_pskreporter
   end
 
   it "should convert locations to coordinates" do

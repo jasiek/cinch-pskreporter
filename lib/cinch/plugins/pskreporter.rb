@@ -1,7 +1,15 @@
-require 'pp'
 require 'cinch'
 require 'rexml/document'
 require 'net/http'
+require 'hashie/mash'
+
+class Hash
+  def symbolize_keys
+    self.inject({}) do |h, (key, value)|
+      h.update(key.to_sym => value)
+    end
+  end
+end
 
 module Cinch::Plugins
   class PSKReporter
@@ -12,9 +20,11 @@ module Cinch::Plugins
     timer 10, method: :check_pskreporter
 
     def check_pskreporter
-      config[:watchers].each do |callsign, channel|
-        reports = pskreporter_reports(callsign, -10 * 60) # 10 minutes
-        msg_reports(channel, reports) if reports.any?
+      config[:watchers].each do |channel, callsigns|
+        callsigns.each do |callsign|
+          reports = pskreporter_reports(callsign, -10 * 60) # 10 minutes
+          msg_reports(channel, reports) if reports.any?
+        end
       end
     end
 
@@ -23,7 +33,7 @@ module Cinch::Plugins
       doc = REXML::Document.new(body)
       [].tap do |reports|
         doc.each_element("//receptionReport") do |element|
-          reports << Report.new(element.attributes)
+          reports << Hashie::Mash.new(element.attributes)
         end
       end
     end
@@ -35,13 +45,17 @@ module Cinch::Plugins
     end
 
     def report_text(r)
-      d = self.class.distance(*[r.senderLocation, r.receiverLocation].map { |loc| self.class.coords_from_maidenhead(loc) })
-      "#{r.receiverCallsign} (#{r.receiverLocation}) heard #{r.senderCallsign} (#{r.senderLocation}) = #{d} km @ #{r.frequency / 1000} MHz using #{r.mode}"
+      frequency = r.frequency.to_f / 1000
+      if d = self.class.distance(*[r.senderLocation, r.receiverLocation].map { |loc| self.class.coords_from_maidenhead(loc) })
+        "#{r.receiverCallsign} (#{r.receiverLocation}) heard #{r.senderCallsign} (#{r.senderLocation}) = #{d} km @ #{frequency} MHz using #{r.mode}"
+      else
+        "#{r.receiverCallsign} heard #{r.senderCallsign} @ #{frequency} MHz using #{r.mode}"
+      end
     end
 
-    Report = Struct.new(*%i{receiverCallsign receiverLocation senderCallsign senderLocator frequency mode})
-
     def self.distance(c1, c2)
+      return nil unless c1 && c2
+
       c1 = deg2rad(c1)
       c2 = deg2rad(c2)
       
@@ -51,6 +65,8 @@ module Cinch::Plugins
     end
 
     def self.coords_from_maidenhead(grid)
+      return nil if grid.nil?
+
       xxx, yyy, xx, yy, x, y = grid.upcase.split(//)
       
       lon = (xxx.ord - 'A'.ord) * 20 - 180 + (xx.ord - '0'.ord) * 2

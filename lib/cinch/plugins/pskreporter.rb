@@ -30,6 +30,7 @@ module Cinch::Plugins
 
     def pskreporter_reports(callsign, since_when)
       body = Net::HTTP.get(URI.parse "http://retrieve.pskreporter.info/query?senderCallsign=#{callsign}&flowStartSeconds=#{since_when}&rronly=1&rand=#{rand}")
+      debug body
       doc = REXML::Document.new(body)
       [].tap do |reports|
         doc.each_element("//receptionReport") do |element|
@@ -47,9 +48,9 @@ module Cinch::Plugins
     def report_text(r)
       frequency = r.frequency.to_f / 1000
       if d = self.class.distance(*[r.senderLocation, r.receiverLocation].map { |loc| self.class.coords_from_maidenhead(loc) })
-        "#{r.receiverCallsign} (#{r.receiverLocation}) heard #{r.senderCallsign} (#{r.senderLocation}) = #{d} km @ #{frequency} MHz using #{r.mode}"
+        "#{r.receiverCallsign} (#{r.receiverLocation}) heard #{r.senderCallsign} (#{r.senderLocation}) = #{d} km @ #{frequency} kHz using #{r.mode}"
       else
-        "#{r.receiverCallsign} heard #{r.senderCallsign} @ #{frequency} MHz using #{r.mode}"
+        "#{r.receiverCallsign} heard #{r.senderCallsign} @ #{frequency} kHz using #{r.mode}"
       end
     end
 

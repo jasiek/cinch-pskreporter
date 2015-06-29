@@ -40,11 +40,26 @@ module Cinch::Plugins
     end
 
     def msg_reports(channel, reports)
-      reports.each do |report|
-        Channel(channel).send(report_text(report))
-      end
+      Channel(channel).send(summary_text(reports))
     end
 
+    def summary_text(reports)
+      max_distance = 0
+      distant_callsign = nil
+      sender_callsign = nil
+      
+      reports.each do |r|
+        d = self.class.distance(*[r.senderLocator, r.receiverLocator].map { |loc| self.class.coords_from_maidenhead(loc) })
+        if d > max_distance
+          max_distance = d
+          distant_callsign = r.receiverCallsign
+        end
+        sender_callsign = r.senderCallsign
+      end
+      "#{sender_callsign} heard in #{reports.size} locations, farthest was #{max_distance}km away (#{distant_callsign})"
+    end
+
+    # Unused ATM
     def report_text(r)
       frequency = r.frequency.to_f / 1000
       if d = self.class.distance(*[r.senderLocator, r.receiverLocator].map { |loc| self.class.coords_from_maidenhead(loc) })

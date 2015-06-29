@@ -35,7 +35,7 @@ describe Cinch::Plugins::PSKReporter do
 
     expect(@plugin).to receive(:pskreporter_reports).with('2e0kef', anything).and_return(reports)
     expect(@plugin).to receive(:pskreporter_reports).with(anything, anything).and_return([]).twice
-    expect(Channel('lhs-radio')).to receive(:send).at_least(3).times
+    expect(Channel('lhs-radio')).to receive(:send).once
     expect(Channel('hamradio')).to receive(:send).never
 
     @plugin.check_pskreporter

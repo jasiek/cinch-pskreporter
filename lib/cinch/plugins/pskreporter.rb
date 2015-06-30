@@ -56,6 +56,8 @@ module Cinch::Plugins
         end
         sender_callsign = r.senderCallsign
       end
+
+      max_distance = max_distance.to_i
       "#{sender_callsign} heard in #{reports.size} locations, farthest was #{max_distance}km away (#{distant_callsign})"
     end
 

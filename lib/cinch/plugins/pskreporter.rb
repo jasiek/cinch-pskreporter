@@ -58,16 +58,16 @@ module Cinch::Plugins
       end
 
       max_distance = max_distance.to_i
-      "#{sender_callsign} heard in #{reports.size} locations, farthest was #{max_distance}km away (#{distant_callsign})"
+      Format(:grey, "#{sender_callsign} heard in #{reports.size} locations, farthest was #{max_distance}km away (#{distant_callsign})")
     end
 
     # Unused ATM
     def report_text(r)
       frequency = r.frequency.to_f / 1000
       if d = self.class.distance(*[r.senderLocator, r.receiverLocator].map { |loc| self.class.coords_from_maidenhead(loc) })
-        "#{r.receiverCallsign} (#{r.receiverLocator}) heard #{r.senderCallsign} (#{r.senderLocator}) = #{d} km @ #{frequency} kHz using #{r.mode}"
+        Format(:grey, "#{r.receiverCallsign} (#{r.receiverLocator}) heard #{r.senderCallsign} (#{r.senderLocator}) = #{d} km @ #{frequency} kHz using #{r.mode}")
       else
-        "#{r.receiverCallsign} heard #{r.senderCallsign} @ #{frequency} kHz using #{r.mode}"
+        Format(:grey, "#{r.receiverCallsign} heard #{r.senderCallsign} @ #{frequency} kHz using #{r.mode}")
       end
     end
 

@@ -65,9 +65,9 @@ module Cinch::Plugins
     def report_text(r)
       frequency = r.frequency.to_f / 1000
       if d = self.class.distance(*[r.senderLocator, r.receiverLocator].map { |loc| self.class.coords_from_maidenhead(loc) })
-        Format(:grey, "#{r.receiverCallsign} (#{r.receiverLocator}) heard #{r.senderCallsign} (#{r.senderLocator}) = #{d} km @ #{frequency} kHz using #{r.mode}")
+        Format(config[:color], "#{r.receiverCallsign} (#{r.receiverLocator}) heard #{r.senderCallsign} (#{r.senderLocator}) = #{d} km @ #{frequency} kHz using #{r.mode}")
       else
-        Format(:grey, "#{r.receiverCallsign} heard #{r.senderCallsign} @ #{frequency} kHz using #{r.mode}")
+        Format(config[:color], "#{r.receiverCallsign} heard #{r.senderCallsign} @ #{frequency} kHz using #{r.mode}")
       end
     end
 
